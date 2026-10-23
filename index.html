@@ -1,366 +1,638 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Elena | Parcel Screening</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parcel Feasibility | Elena</title>
 
-  <link rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      color: #17251f;
-      background: #f4f7f5;
-    }
-
-    header {
-      padding: 20px 28px;
-      background: #123b2b;
-      color: white;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    header h1 { margin: 0; font-size: 22px; }
-    header p { margin: 5px 0 0; color: #c7dfd1; font-size: 13px; }
-
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
-      gap: 20px;
-      padding: 22px;
-    }
-
-    .panel {
-      background: white;
-      border: 1px solid #e0e8e2;
-      border-radius: 14px;
-      padding: 20px;
-      min-width: 0;
-    }
-
-    h2 { margin: 0 0 16px; font-size: 17px; }
-
-    #map {
-      height: 460px;
-      border-radius: 10px;
-      z-index: 0;
-    }
-
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-top: 15px;
-      font-size: 13px;
-    }
-
-    .dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 5px;
-    }
-
-    .green { background: #16a34a; }
-    .red { background: #dc2626; }
-    .yellow { background: #eab308; }
-
-    .score-box {
-      padding: 18px;
-      background: #f0f8f2;
-      border-radius: 10px;
-      margin-bottom: 18px;
-    }
-
-    .score {
-      font-size: 36px;
-      font-weight: 750;
-      color: #16803d;
-    }
-
-    .muted { color: #718078; font-size: 13px; }
-
-    .metric {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px 0;
-      border-bottom: 1px solid #edf0ed;
-    }
-
-    .metric strong { text-align: right; }
-
-    .logic {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f8faf8;
-      border-radius: 10px;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .logic p { margin: 8px 0; }
-
-    button {
-      cursor: pointer;
-      border: 0;
-      border-radius: 9px;
-      padding: 13px 16px;
-      font-weight: 650;
-      font-size: 14px;
-    }
-
-    .export {
-      width: 100%;
-      margin-top: 18px;
-      background: #176b43;
-      color: white;
-    }
-
-    button:hover { filter: brightness(.94); }
-
-    @media (max-width: 850px) {
-      .layout { grid-template-columns: 1fr; padding: 12px; }
-      #map { height: 360px; }
-      header { padding: 18px; }
-    }
-
-    /* Print only the briefing card */
-    @media print {
-      body { background: white; }
-      header, .map-panel, .export, .screen-only {
-        display: none !important;
-      }
-      .layout { display: block; padding: 0; }
-      .panel {
-        border: none;
-        padding: 0;
-      }
-      .score-box { border: 1px solid #ddd; }
-      .logic { background: white; border: 1px solid #ddd; }
-      .brief-footer { display: block !important; }
-    }
-  </style>
+<style>
+:root {
+  --green:#16834a;
+  --green-bg:#eaf7ef;
+  --red:#cf3535;
+  --red-bg:#fff0ef;
+  --yellow:#a66d08;
+  --yellow-bg:#fff6df;
+  --ink:#192820;
+  --muted:#708078;
+  --line:#e3e9e4;
+  --bg:#f4f7f5;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.5 Inter,Arial,sans-serif
+}
+header {
+  background:#123b2b;color:white;padding:20px 26px;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:16px
+}
+h1,h2,h3,p {margin-top:0}
+h1 {font-size:22px;margin-bottom:3px}
+h2 {font-size:17px;margin-bottom:15px}
+h3 {font-size:14px;margin-bottom:8px}
+header p {color:#c8dfd1;margin-bottom:0;font-size:12px}
+main {padding:22px;max-width:1600px;margin:auto}
+.topbar {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;margin-bottom:18px
+}
+.eyebrow {color:var(--muted);font-size:11px;
+  font-weight:750;letter-spacing:1px;text-transform:uppercase}
+.layout {
+  display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);
+  gap:18px
+}
+.panel {
+  background:white;border:1px solid var(--line);
+  border-radius:13px;padding:19px;min-width:0
+}
+.metrics {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;margin-bottom:18px
+}
+.metric-card {
+  background:white;border:1px solid var(--line);
+  border-radius:11px;padding:15px
+}
+.metric-card .number {font-size:24px;font-weight:750;margin:5px 0}
+.muted {color:var(--muted);font-size:12px}
+#map {height:420px;border-radius:10px;z-index:0}
+.legend {display:flex;gap:13px;flex-wrap:wrap;margin-top:12px}
+.legend span {font-size:12px}
+.dot {display:inline-block;width:9px;height:9px;
+  border-radius:50%;margin-right:5px}
+.g {background:var(--green)}
+.y {background:#eab308}
+.r {background:var(--red)}
+.row {
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;padding:12px 0;border-bottom:1px solid #edf0ed
+}
+.row:last-child {border-bottom:0}
+.row .detail {flex:1}
+.row strong {text-align:right}
+.badge {
+  display:inline-block;border-radius:5px;padding:3px 7px;
+  font-size:11px;font-weight:750;white-space:nowrap
+}
+.good {background:var(--green-bg);color:var(--green)}
+.warn {background:var(--yellow-bg);color:var(--yellow)}
+.bad {background:var(--red-bg);color:var(--red)}
+.neutral {background:#edf0ed;color:#526158}
+.score-box {
+  border-radius:11px;padding:18px;margin-bottom:15px;
+  background:var(--green-bg)
+}
+.score {
+  font-size:38px;line-height:1.2;font-weight:800;
+  color:var(--green);margin:5px 0
+}
+.progress {
+  height:8px;border-radius:8px;background:#e7ece8;overflow:hidden
+}
+.progress span {
+  display:block;height:100%;background:var(--green);
+  width:0%;transition:width .2s
+}
+input,select {
+  max-width:100%;padding:9px;border:1px solid #d6ded8;
+  border-radius:7px;background:white;color:var(--ink)
+}
+label {font-size:12px;font-weight:650}
+.controls {
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  margin:12px 0
+}
+button {
+  border:1px solid var(--line);background:white;color:var(--ink);
+  border-radius:8px;padding:10px 13px;font-weight:700;
+  cursor:pointer
+}
+button:hover {filter:brightness(.96)}
+.primary {background:#176b43;color:white;border-color:#176b43}
+.danger {color:var(--red)}
+.full {width:100%;margin-top:12px}
+.logic {
+  background:#f7faf7;border:1px solid var(--line);
+  padding:13px;border-radius:9px;margin-top:15px
+}
+.logic p {margin:7px 0;font-size:12px}
+table {border-collapse:collapse;width:100%;font-size:12px}
+th,td {padding:10px;text-align:left;border-bottom:1px solid var(--line)}
+th {color:var(--muted);font-size:11px;text-transform:uppercase}
+.table-wrap {overflow-x:auto}
+.parcel-list {margin-top:18px}
+.parcel-item {
+  display:flex;align-items:center;gap:10px;padding:11px 0;
+  border-bottom:1px solid var(--line)
+}
+.parcel-item button {padding:6px 9px;font-size:11px}
+.parcel-item .parcel-info {flex:1;min-width:0}
+.parcel-item .parcel-info strong {display:block}
+.small {font-size:11px;color:var(--muted)}
+.footnote {font-size:11px;color:var(--muted);margin-top:15px}
+@media(max-width:950px) {
+  .layout {grid-template-columns:1fr}
+  main {padding:12px}
+}
+@media(max-width:520px) {
+  .metrics {grid-template-columns:1fr 1fr}
+  header {padding:16px}
+  #map {height:340px}
+}
+@media print {
+  body {background:white;font-size:11px}
+  header,.map-panel,.topbar,.parcel-list,.no-print {display:none!important}
+  main {padding:0;max-width:none}
+  .layout {display:block}
+  .panel {border:0;padding:0}
+  .score-box,.logic {background:white;border:1px solid #ddd}
+  .metrics {grid-template-columns:repeat(3,1fr)}
+  .footnote {font-size:9px}
+  .row {padding:6px 0}
+  @page {size:letter;margin:12mm}
+}
+</style>
 </head>
 
 <body>
 <header>
   <div>
     <h1>Parcel Intelligence</h1>
-    <p>Land acquisition · Preliminary feasibility screening</p>
+    <p>Parcel-first screening · Prototype feasibility</p>
   </div>
-  <span>ELENA'S WORKSPACE</span>
+  <div>ELENA'S WORKSPACE</div>
 </header>
 
-<main class="layout">
-  <section class="panel map-panel">
-    <h2>Interactive parcel map</h2>
-    <div id="map"></div>
-
-    <div class="legend">
-      <span><i class="dot green"></i>Developable</span>
-      <span><i class="dot yellow"></i>Needs review</span>
-      <span><i class="dot red"></i>Disqualified</span>
+<main>
+  <div class="topbar">
+    <div>
+      <div class="eyebrow">Land acquisition / early feasibility</div>
+      <h2 style="margin:5px 0">Parcel Screening Dashboard</h2>
+      <div class="muted">Evaluate individual parcels before assembling sites.</div>
     </div>
-    <p class="muted">
-      Demo parcels only. Click a polygon to inspect its scorecard.
-    </p>
+    <div class="controls no-print">
+      <button onclick="addParcel()">+ Add parcel</button>
+      <button onclick="showArchived()">View archived</button>
+      <button onclick="window.print()">Export briefing PDF</button>
+    </div>
+  </div>
+
+  <section class="metrics">
+    <div class="metric-card">
+      <div class="muted">Active parcels</div>
+      <div class="number" id="activeCount">3</div>
+      <div class="small">Individual records</div>
+    </div>
+    <div class="metric-card">
+      <div class="muted">Combined net acreage</div>
+      <div class="number" id="netTotal">—</div>
+      <div class="small">Active parcel estimates</div>
+    </div>
+    <div class="metric-card">
+      <div class="muted">Site assembly target</div>
+      <div class="number">500–700+</div>
+      <div class="small">Usable contiguous acres</div>
+    </div>
   </section>
 
-  <section class="panel">
-    <h2>Parcel scorecard</h2>
-
-    <div class="score-box">
-      <div class="muted">OVERALL VIABILITY SCORE</div>
-      <div class="score" id="score">82 / 100</div>
-      <strong id="status">● Viable for further screening</strong>
-      <p class="muted" id="parcelName">Parcel P-001 · North Ridge</p>
-    </div>
-
-    <div class="metric">
-      <span>Acreage</span>
-      <strong id="acreage">540 acres 🟢</strong>
-    </div>
-    <div class="metric">
-      <span>Grid proximity</span>
-      <strong id="grid">0.6 miles 🟢</strong>
-    </div>
-    <div class="metric">
-      <span>Flood zone overlap</span>
-      <strong id="flood">12% 🟡</strong>
-    </div>
-    <div class="metric">
-      <span>Flood penalty</span>
-      <strong id="penalty">−18 points</strong>
-    </div>
-    <div class="metric">
-      <span>Protected lands</span>
-      <strong id="protected">0% 🟢</strong>
-    </div>
-
-    <div class="logic">
-      <strong>Why did this parcel receive its score?</strong>
-      <div id="explanation" aria-live="polite">
-        <p>🟢 Acreage meets the example screening threshold.</p>
-        <p>🟢 Substation proximity is favorable, pending capacity review.</p>
-        <p>🟡 Flood exposure triggers an illustrative penalty.</p>
-        <p>🟢 No protected-land overlap reported in demo data.</p>
+  <div class="layout">
+    <section class="panel map-panel">
+      <h2>1. Parcel map</h2>
+      <div class="controls no-print">
+        <label for="filter">Filter parcels</label>
+        <select id="filter" onchange="renderMap()">
+          <option value="all">All active</option>
+          <option value="good">Higher score (70+)</option>
+          <option value="review">Needs review (45–69)</option>
+          <option value="low">Low score (under 45)</option>
+        </select>
       </div>
-      <p class="muted">
-        All demo values are illustrative, not verified findings.
+      <div id="map"></div>
+      <div class="legend">
+        <span><i class="dot g"></i>Higher score</span>
+        <span><i class="dot y"></i>Needs review</span>
+        <span><i class="dot r"></i>Low score / potential exclusion</span>
+      </div>
+      <p class="footnote">
+        Scores are screening indicators, not proof of development feasibility.
+        Polygon geometry and attributes below are synthetic demo data.
       </p>
-    </div>
+      <div class="parcel-list no-print">
+        <h3>Active parcels</h3>
+        <div id="parcelList"></div>
+      </div>
+    </section>
 
-    <button class="export" onclick="window.print()">
-      ↗ Export Briefing Card
-    </button>
+    <section class="panel">
+      <div class="eyebrow">Selected parcel</div>
+      <div class="controls no-print">
+        <select id="parcelSelect" onchange="selectParcel(this.value)"
+          aria-label="Choose parcel"></select>
+      </div>
 
-    <p class="muted screen-only">
-      Opens your browser's print dialog. Choose “Save as PDF”
-      to create a shareable briefing.
-    </p>
+      <div class="score-box">
+        <div class="muted">PRELIMINARY PARCEL SCORE</div>
+        <div class="score" id="score">—</div>
+        <strong id="status">Select a parcel</strong>
+        <p class="muted" id="parcelName"></p>
+        <div class="progress"><span id="scoreBar"></span></div>
+      </div>
 
-    <div class="brief-footer" style="display:none">
-      <hr>
-      <p>
-        Preliminary parcel screening only. Confirm source data,
-        land-use restrictions, environmental constraints, and
-        utility interconnection feasibility before making decisions.
-      </p>
-      <p id="reportDate"></p>
-    </div>
-  </section>
+      <h3>Parcel metrics</h3>
+      <div id="metrics"></div>
+
+      <div class="logic">
+        <h3>Transparent logic</h3>
+        <div id="explanation"></div>
+      </div>
+
+      <div class="logic">
+        <h3>Site assembly readiness</h3>
+        <p id="assemblyText"></p>
+        <div class="progress"><span id="assemblyBar"></span></div>
+        <p class="muted">
+          Assembly progress uses active parcel estimates as a rough planning
+          indicator. It does not establish contiguity or a viable site.
+        </p>
+      </div>
+
+      <div class="controls no-print">
+        <button class="danger" onclick="archiveSelected()">× Archive old parcel</button>
+        <button onclick="editSelected()">Edit parcel data</button>
+      </div>
+      <button class="primary full no-print" onclick="window.print()">
+        Export Parcel Briefing Card ↗
+      </button>
+
+      <div class="footnote">
+        <b>Important:</b> Preliminary feasibility only. Verify environmental
+        constraints, usable acreage, land control, interconnection capacity,
+        and applicable permitting requirements.
+        <div id="reportDate"></div>
+      </div>
+    </section>
+  </div>
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  // Synthetic example data — replace with real parcel GeoJSON.
-  const parcels = [
-    {
-      id: "P-001",
-      name: "North Ridge",
-      score: 82,
-      acres: 540,
-      grid: 0.6,
-      flood: 12,
-      penalty: 18,
-      protected: 0,
-      coords: [
-        [35.25, -80.90], [35.25, -80.88],
-        [35.27, -80.88], [35.27, -80.90]
-      ]
-    },
-    {
-      id: "P-002",
-      name: "Creekside",
-      score: 34,
-      acres: 180,
-      grid: 3.2,
-      flood: 45,
-      penalty: 35,
-      protected: 8,
-      coords: [
-        [35.28, -80.92], [35.28, -80.90],
-        [35.30, -80.90], [35.30, -80.92]
-      ]
-    }
-  ];
-
-  const map = L.map("map").setView([35.27, -80.90], 12);
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap contributors"
-  }).addTo(map);
-
-  function colorFor(score) {
-    if (score >= 70) return "#16a34a";
-    if (score >= 45) return "#eab308";
-    return "#dc2626";
+/*
+  DEMO DATA ONLY.
+  Replace with actual parcel polygons, terrain analysis, wetlands data,
+  transmission information, and verified interconnection points.
+*/
+let parcels = [
+  {
+    id:"P-001", name:"North Ridge", active:true,
+    gross:540, usable:465, wetland:5, steep:8,
+    grid:0.8, crossings:1, nearLines:2,
+    lat:35.25, lng:-80.90
+  },
+  {
+    id:"P-002", name:"Creekside", active:true,
+    gross:320, usable:210, wetland:24, steep:32,
+    grid:2.2, crossings:4, nearLines:7,
+    lat:35.28, lng:-80.92
+  },
+  {
+    id:"P-003", name:"West Meadow", active:true,
+    gross:410, usable:350, wetland:8, steep:12,
+    grid:1.7, crossings:0, nearLines:2,
+    lat:35.30, lng:-80.87
+  },
+  {
+    id:"P-004", name:"Old Candidate", active:false,
+    gross:260, usable:170, wetland:18, steep:20,
+    grid:4.5, crossings:3, nearLines:5,
+    lat:35.32, lng:-80.91
   }
+];
 
-  function statusFor(score) {
-    if (score >= 70) return "Viable for further screening";
-    if (score >= 45) return "Needs further review";
-    return "Disqualified under demo rules";
-  }
+let selectedId = "P-001";
+let polygons = [];
+let archivedView = false;
 
-  function selectParcel(p) {
-    document.getElementById("score").textContent =
-      `${p.score} / 100`;
-    document.getElementById("score").style.color =
-      colorFor(p.score);
-    document.getElementById("status").textContent =
-      "● " + statusFor(p.score);
-    document.getElementById("parcelName").textContent =
-      `Parcel ${p.id} · ${p.name}`;
-    document.getElementById("acreage").textContent =
-      `${p.acres} acres`;
-    document.getElementById("grid").textContent =
-      `${p.grid} miles`;
-    document.getElementById("flood").textContent =
-      `${p.flood}%`;
-    document.getElementById("penalty").textContent =
-      `−${p.penalty} points`;
-    document.getElementById("protected").textContent =
-      `${p.protected}%`;
+const map = L.map("map").setView([35.28,-80.90],11);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom:19,
+  attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
 
-    const explanations = [
-      p.acres >= 500
-        ? "🟢 Acreage meets the example threshold."
-        : "🟡 Acreage is below the example threshold.",
-      p.grid <= 1
-        ? "🟢 Substation proximity is favorable; capacity remains unverified."
-        : "🟡 Grid connection distance needs further investigation.",
-      `🟡 ${p.flood}% flood overlap; illustrative penalty: −${p.penalty} points.`,
-      p.protected === 0
-        ? "🟢 No protected-land overlap recorded in demo data."
-        : `🔴 ${p.protected}% protected-land overlap requires review.`
+function currentParcels() {
+  return parcels.filter(p => p.active === !archivedView);
+}
+
+function getParcel(id) {
+  return parcels.find(p => p.id === id);
+}
+
+function scoreParcel(p) {
+  // Example weighting, intended for prototype testing only.
+  // Weights total 100. Thresholds should be calibrated with domain experts.
+  const acreage = Math.min(100, p.usable / 500 * 100);
+  const wetlands = Math.max(0, 100 - p.wetland * 2);
+  const slope = Math.max(0, 100 - p.steep * 2);
+  const interconnection = Math.max(0, 100 - p.grid / 3 * 100);
+  const transmission = Math.max(
+    0, 100 - p.crossings * 12 - Math.max(0,p.nearLines-3)*5
+  );
+
+  const score = Math.round(
+    acreage * .25 +
+    wetlands * .20 +
+    slope * .20 +
+    interconnection * .20 +
+    transmission * .15
+  );
+
+  return {
+    score,
+    components:[
+      {name:"Usable acreage",value:acreage,weight:25,
+       evidence:`${p.usable} estimated usable acres`},
+      {name:"Wetlands",value:wetlands,weight:20,
+       evidence:`${p.wetland}% estimated wetland overlap`},
+      {name:"Terrain slope",value:slope,weight:20,
+       evidence:`${p.steep}% estimated steep area`},
+      {name:"Interconnection proximity",value:interconnection,weight:20,
+       evidence:`${p.grid} miles to candidate connection point`},
+      {name:"Transmission constraints",value:transmission,weight:15,
+       evidence:`${p.crossings} crossings; ${p.nearLines} nearby lines (reported)`}
+    ]
+  };
+}
+
+function colorFor(score) {
+  if(score >= 70) return "#16834a";
+  if(score >= 45) return "#d5a018";
+  return "#cf3535";
+}
+
+function labelFor(score) {
+  if(score >= 70) return "Higher screening score";
+  if(score >= 45) return "Needs review";
+  return "Low score — investigate exclusions";
+}
+
+function renderMap() {
+  polygons.forEach(layer => map.removeLayer(layer));
+  polygons = [];
+
+  const filter = document.getElementById("filter").value;
+
+  currentParcels().forEach(p => {
+    const score = scoreParcel(p).score;
+    if(filter === "good" && score < 70) return;
+    if(filter === "review" && (score < 45 || score >= 70)) return;
+    if(filter === "low" && score >= 45) return;
+
+    // Demo rectangle only. Use real parcel boundary GeoJSON in production.
+    const bounds = [
+      [p.lat,p.lng],
+      [p.lat,p.lng+0.018],
+      [p.lat+0.014,p.lng+0.018],
+      [p.lat+0.014,p.lng]
     ];
 
-    document.getElementById("explanation").innerHTML =
-      explanations.map(s => `<p>${s}</p>`).join("");
-
-    document.getElementById("reportDate").textContent =
-      "Generated: " + new Date().toLocaleDateString();
-
-    document.title = `Parcel Brief - ${p.id}`;
-  }
-
-  parcels.forEach(p => {
-    const polygon = L.polygon(p.coords, {
-      color: colorFor(p.score),
-      fillColor: colorFor(p.score),
-      fillOpacity: 0.35,
-      weight: 2
+    const layer = L.polygon(bounds,{
+      color:colorFor(score),
+      fillColor:colorFor(score),
+      fillOpacity:p.id === selectedId ? .55 : .28,
+      weight:p.id === selectedId ? 4 : 2
     }).addTo(map);
 
-    polygon.bindTooltip(`${p.id} · ${p.score}/100`);
-    polygon.bindPopup(
-      `<strong>${p.name}</strong><br>` +
-      `Score: ${p.score}/100<br>` +
-      `<button onclick="window.selectParcel('${p.id}')">View scorecard</button>`
+    layer.bindTooltip(`${p.id} · ${score}/100`);
+    layer.bindPopup(
+      `<b>${p.id}: ${p.name}</b><br>`+
+      `${p.usable} estimated usable acres<br>`+
+      `${score}/100 · ${labelFor(score)}<br>`+
+      `<button onclick="window.chooseParcel('${p.id}')">Open parcel</button>`
     );
-
-    polygon.on("click", () => selectParcel(p));
+    layer.on("click",() => selectParcel(p.id));
+    polygons.push(layer);
   });
 
-  window.selectParcel = id => {
-    const parcel = parcels.find(p => p.id === id);
-    if (parcel) selectParcel(parcel);
-  };
+  renderParcelList();
+}
 
-  selectParcel(parcels[0]);
+function renderParcelList() {
+  const active = currentParcels();
+  document.getElementById("parcelList").innerHTML = active.length
+    ? active.map(p => `
+      <div class="parcel-item">
+        <div class="parcel-info">
+          <strong>${p.id} · ${p.name}</strong>
+          <span class="small">${p.usable} usable acres ·
+            ${scoreParcel(p).score}/100</span>
+        </div>
+        <button onclick="selectParcel('${p.id}')">Open</button>
+      </div>`).join("")
+    : '<p class="muted">No parcels in this view.</p>';
+}
+
+function selectParcel(id) {
+  const p = getParcel(id);
+  if(!p || p.active === false) return;
+  selectedId = id;
+  archivedView = false;
+  document.getElementById("filter").value = "all";
+  document.getElementById("parcelSelect").value = id;
+  updateDashboard();
+  renderMap();
+}
+
+function updateDashboard() {
+  const active = parcels.filter(p => p.active);
+  const p = getParcel(selectedId);
+
+  document.getElementById("activeCount").textContent = active.length;
+  document.getElementById("netTotal").textContent =
+    active.reduce((sum,p) => sum+p.usable,0).toLocaleString();
+
+  const selector = document.getElementById("parcelSelect");
+  selector.innerHTML = active.map(p =>
+    `<option value="${p.id}">${p.id} — ${p.name}</option>`
+  ).join("");
+
+  if(!p || !p.active) {
+    selectedId = active[0]?.id;
+    if(!selectedId) {
+      document.getElementById("score").textContent = "—";
+      document.getElementById("parcelName").textContent =
+        "No active parcels";
+      document.getElementById("metrics").innerHTML = "";
+      document.getElementById("explanation").innerHTML = "";
+      return;
+    }
+    return updateDashboard();
+  }
+
+  selector.value = p.id;
+  const result = scoreParcel(p);
+  const score = result.score;
+
+  document.getElementById("score").textContent = score + " / 100";
+  document.getElementById("score").style.color = colorFor(score);
+  document.getElementById("scoreBar").style.width = score + "%";
+  document.getElementById("scoreBar").style.background = colorFor(score);
+  document.getElementById("status").textContent = labelFor(score);
+  document.getElementById("parcelName").textContent =
+    `${p.id} · ${p.name} · Individual parcel`;
+  document.getElementById("reportDate").textContent =
+    "Brief generated: " + new Date().toLocaleDateString();
+
+  const items = [
+    ["Gross acreage",`${p.gross} acres`],
+    ["Estimated usable acreage",`${p.usable} acres`],
+    ["Wetlands",`${p.wetland}% overlap`],
+    ["Steep terrain",`${p.steep}% of parcel`],
+    ["Distance to connection point",`${p.grid} miles`],
+    ["Transmission crossings",p.crossings],
+    ["Nearby transmission lines",p.nearLines]
+  ];
+
+  document.getElementById("metrics").innerHTML = items.map(([name,value]) =>
+    `<div class="row"><span class="detail">${name}</span>`+
+    `<strong>${value}</strong></div>`
+  ).join("");
+
+  document.getElementById("explanation").innerHTML =
+    result.components.map(c => `
+      <div class="row">
+        <div class="detail">
+          <strong>${c.name}</strong>
+          <div class="muted">${c.evidence}</div>
+          <div class="muted">Weight: ${c.weight}%</div>
+        </div>
+        <span class="badge ${c.value >= 70 ? "good" : c.value >= 45 ? "warn" : "bad"}">
+          ${Math.round(c.value)}/100
+        </span>
+      </div>`).join("") +
+      `<p><b>Calculation:</b> weighted average of the five displayed
+      component scores. This prototype formula is not a validated
+      feasibility model.</p>`;
+
+  // Aggregate acreage is a planning indicator only. It does not establish
+  // contiguity; parcels may overlap, be separated, or lack land control.
+  const net = active.reduce((sum,q) => sum+q.usable,0);
+  const target = 700;
+  document.getElementById("assemblyText").textContent =
+    `${net.toLocaleString()} estimated usable acres across `+
+    `${active.length} active parcels. Target: 500–700+ usable contiguous acres.`;
+  document.getElementById("assemblyBar").style.width =
+    Math.min(100,net/target*100)+"%";
+}
+
+function archiveSelected() {
+  const p = getParcel(selectedId);
+  if(!p) return;
+  if(!confirm(`Archive ${p.id} — ${p.name}? It will be hidden from active screening.`)) return;
+  p.active = false;
+  const next = parcels.find(q => q.active);
+  selectedId = next ? next.id : null;
+  if(selectedId) updateDashboard();
+  else {
+    document.getElementById("score").textContent = "—";
+    document.getElementById("parcelName").textContent = "No active parcels";
+  }
+  renderMap();
+}
+
+function showArchived() {
+  archivedView = !archivedView;
+  const archived = parcels.filter(p => !p.active);
+  if(archivedView && archived.length) {
+    document.getElementById("parcelList").innerHTML = archived.map(p =>
+      `<div class="parcel-item"><div class="parcel-info">
+        <strong>${p.id} · ${p.name}</strong>
+        <span class="small">Archived · ${p.usable} estimated usable acres</span>
+      </div><button onclick="restoreParcel('${p.id}')">Restore</button></div>`
+    ).join("");
+    document.querySelector(".parcel-list h3").textContent = "Archived parcels";
+  } else {
+    archivedView = false;
+    document.querySelector(".parcel-list h3").textContent = "Active parcels";
+    renderMap();
+  }
+}
+
+function restoreParcel(id) {
+  const p = getParcel(id);
+  if(!p) return;
+  p.active = true;
+  archivedView = false;
+  selectedId = id;
+  updateDashboard();
+  renderMap();
+}
+
+function addParcel() {
+  const id = prompt("New parcel ID (e.g. P-005):");
+  if(!id || parcels.some(p => p.id === id.trim())) {
+    if(id) alert("That parcel ID already exists.");
+    return;
+  }
+  const name = prompt("Parcel name:");
+  if(!name) return;
+  const gross = Number(prompt("Gross acreage:", "200"));
+  if(!Number.isFinite(gross) || gross <= 0) {
+    alert("Enter a positive acreage.");
+    return;
+  }
+
+  const lat = 35.25 + Math.random()*.07;
+  const lng = -80.93 + Math.random()*.07;
+  parcels.push({
+    id:id.trim(),name:name.trim(),active:true,
+    gross,usable:gross,wetland:0,steep:0,grid:3,
+    crossings:0,nearLines:0,lat,lng
+  });
+  selectedId = id.trim();
+  updateDashboard();
+  renderMap();
+}
+
+function editSelected() {
+  const p = getParcel(selectedId);
+  if(!p) return;
+  const fields = [
+    ["gross","Gross acreage"],
+    ["usable","Estimated usable acreage"],
+    ["wetland","Wetlands overlap (%)"],
+    ["steep","Steep area (%)"],
+    ["grid","Distance to interconnection point (miles)"],
+    ["crossings","Transmission crossings"],
+    ["nearLines","Nearby transmission lines"]
+  ];
+
+  for(const [key,label] of fields) {
+    const value = prompt(label,p[key]);
+    if(value === null) return;
+    const n = Number(value);
+    if(!Number.isFinite(n) || n < 0) {
+      alert("Enter a valid non-negative number.");
+      return;
+    }
+    p[key] = n;
+  }
+
+  if(p.usable > p.gross || p.wetland > 100 || p.steep > 100) {
+    alert("Check the data: usable acres cannot exceed gross acres, and percentages cannot exceed 100.");
+    return;
+  }
+  updateDashboard();
+  renderMap();
+}
+
+window.chooseParcel = selectParcel;
+updateDashboard();
+renderMap();
 </script>
 </body>
 </html>
