@@ -164,7 +164,7 @@ th {color:var(--muted);font-size:11px;text-transform:uppercase}
 <header>
   <div>
     <h1>Parcel Intelligence</h1>
-    <p>Parcel-first screening · Prototype feasibility</p>
+    <p>10 sample sites · Wake, Johnston & Mecklenburg Counties</p>
   </div>
   <div>ELENA'S WORKSPACE</div>
 </header>
@@ -212,6 +212,13 @@ th {color:var(--muted);font-size:11px;text-transform:uppercase}
           <option value="review">Needs review (45–69)</option>
           <option value="low">Low score (under 45)</option>
         </select>
+        <label for="countyFilter">County</label>
+        <select id="countyFilter" onchange="renderMap(); updateDashboard()">
+          <option value="all">All target counties</option>
+          <option value="Wake">Wake</option>
+          <option value="Johnston">Johnston</option>
+          <option value="Mecklenburg">Mecklenburg</option>
+        </select>
       </div>
       <div id="map"></div>
       <div class="legend">
@@ -221,7 +228,7 @@ th {color:var(--muted);font-size:11px;text-transform:uppercase}
       </div>
       <p class="footnote">
         Scores are screening indicators, not proof of development feasibility.
-        Polygon geometry and attributes below are synthetic demo data.
+        All 10 site records, polygon geometry, and attributes are synthetic demo data—not verified properties.
       </p>
       <div class="parcel-list no-print">
         <h3>Active parcels</h3>
@@ -288,44 +295,31 @@ th {color:var(--muted);font-size:11px;text-transform:uppercase}
   transmission information, and verified interconnection points.
 */
 let parcels = [
-  {
-    id:"P-001", name:"North Ridge", active:true,
-    gross:540, usable:465, wetland:5, steep:8,
-    grid:0.8, crossings:1, nearLines:2,
-    lat:35.25, lng:-80.90
-  },
-  {
-    id:"P-002", name:"Creekside", active:true,
-    gross:320, usable:210, wetland:24, steep:32,
-    grid:2.2, crossings:4, nearLines:7,
-    lat:35.28, lng:-80.92
-  },
-  {
-    id:"P-003", name:"West Meadow", active:true,
-    gross:410, usable:350, wetland:8, steep:12,
-    grid:1.7, crossings:0, nearLines:2,
-    lat:35.30, lng:-80.87
-  },
-  {
-    id:"P-004", name:"Old Candidate", active:false,
-    gross:260, usable:170, wetland:18, steep:20,
-    grid:4.5, crossings:3, nearLines:5,
-    lat:35.32, lng:-80.91
-  }
+  {id:"S-001",name:"Wake North",county:"Wake",active:true,gross:540,usable:465,wetland:5,steep:8,grid:0.8,crossings:1,nearLines:2,lat:35.90,lng:-78.70},
+  {id:"S-002",name:"Wake East",county:"Wake",active:true,gross:420,usable:340,wetland:10,steep:12,grid:1.4,crossings:1,nearLines:3,lat:35.78,lng:-78.45},
+  {id:"S-003",name:"Wake South",county:"Wake",active:true,gross:390,usable:300,wetland:8,steep:9,grid:2.0,crossings:2,nearLines:4,lat:35.62,lng:-78.72},
+  {id:"S-004",name:"Wake West",county:"Wake",active:true,gross:460,usable:370,wetland:12,steep:10,grid:1.6,crossings:1,nearLines:2,lat:35.77,lng:-78.90},
+  {id:"S-005",name:"Johnston North",county:"Johnston",active:true,gross:510,usable:420,wetland:7,steep:6,grid:1.1,crossings:1,nearLines:2,lat:35.63,lng:-78.52},
+  {id:"S-006",name:"Johnston Central",county:"Johnston",active:true,gross:440,usable:350,wetland:14,steep:11,grid:2.3,crossings:2,nearLines:4,lat:35.51,lng:-78.35},
+  {id:"S-007",name:"Johnston South",county:"Johnston",active:true,gross:360,usable:270,wetland:18,steep:15,grid:2.8,crossings:3,nearLines:5,lat:35.38,lng:-78.37},
+  {id:"S-008",name:"Mecklenburg North",county:"Mecklenburg",active:true,gross:480,usable:390,wetland:9,steep:10,grid:1.2,crossings:1,nearLines:3,lat:35.38,lng:-80.82},
+  {id:"S-009",name:"Mecklenburg East",county:"Mecklenburg",active:true,gross:400,usable:310,wetland:16,steep:13,grid:2.1,crossings:2,nearLines:4,lat:35.22,lng:-80.65},
+  {id:"S-010",name:"Mecklenburg South",county:"Mecklenburg",active:true,gross:530,usable:440,wetland:6,steep:7,grid:0.9,crossings:1,nearLines:2,lat:35.08,lng:-80.84}
 ];
 
-let selectedId = "P-001";
+let selectedId = "S-001";
 let polygons = [];
 let archivedView = false;
 
-const map = L.map("map").setView([35.28,-80.90],11);
+const map = L.map("map").setView([35.52,-79.55],7);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom:19,
   attribution:"&copy; OpenStreetMap contributors"
 }).addTo(map);
 
 function currentParcels() {
-  return parcels.filter(p => p.active === !archivedView);
+  const county = document.getElementById("countyFilter")?.value || "all";
+  return parcels.filter(p => p.active === !archivedView && (county === "all" || p.county === county));
 }
 
 function getParcel(id) {
@@ -409,7 +403,7 @@ function renderMap() {
 
     layer.bindTooltip(`${p.id} · ${score}/100`);
     layer.bindPopup(
-      `<b>${p.id}: ${p.name}</b><br>`+
+      `<b>${p.id}: ${p.name}</b><br>${p.county} County<br>`+
       `${p.usable} estimated usable acres<br>`+
       `${score}/100 · ${labelFor(score)}<br>`+
       `<button onclick="window.chooseParcel('${p.id}')">Open parcel</button>`
@@ -419,6 +413,14 @@ function renderMap() {
   });
 
   renderParcelList();
+
+  // Keep the map framed around the currently visible demo sites.
+  if (polygons.length) {
+    const group = L.featureGroup(polygons);
+    map.fitBounds(group.getBounds().pad(0.12), { maxZoom: 9 });
+  }
+  // Correct map sizing if the browser has just finished laying out the page.
+  setTimeout(() => map.invalidateSize(), 100);
 }
 
 function renderParcelList() {
@@ -448,7 +450,8 @@ function selectParcel(id) {
 }
 
 function updateDashboard() {
-  const active = parcels.filter(p => p.active);
+  const countyFilter = document.getElementById("countyFilter")?.value || "all";
+  const active = parcels.filter(p => p.active && (countyFilter === "all" || p.county === countyFilter));
   const p = getParcel(selectedId);
 
   document.getElementById("activeCount").textContent = active.length;
@@ -460,7 +463,7 @@ function updateDashboard() {
     `<option value="${p.id}">${p.id} — ${p.name}</option>`
   ).join("");
 
-  if(!p || !p.active) {
+  if(!p || !p.active || (countyFilter !== "all" && p.county !== countyFilter)) {
     selectedId = active[0]?.id;
     if(!selectedId) {
       document.getElementById("score").textContent = "—";
@@ -483,11 +486,12 @@ function updateDashboard() {
   document.getElementById("scoreBar").style.background = colorFor(score);
   document.getElementById("status").textContent = labelFor(score);
   document.getElementById("parcelName").textContent =
-    `${p.id} · ${p.name} · Individual parcel`;
+    `${p.id} · ${p.name} · ${p.county} County · Sample site`;
   document.getElementById("reportDate").textContent =
     "Brief generated: " + new Date().toLocaleDateString();
 
   const items = [
+    ["County",p.county],
     ["Gross acreage",`${p.gross} acres`],
     ["Estimated usable acreage",`${p.usable} acres`],
     ["Wetlands",`${p.wetland}% overlap`],
@@ -578,8 +582,17 @@ function addParcel() {
     if(id) alert("That parcel ID already exists.");
     return;
   }
-  const name = prompt("Parcel name:");
+  const name = prompt("Site name:");
   if(!name) return;
+  const county = prompt("County (Wake, Johnston, or Mecklenburg):", "Wake");
+  if(!["Wake","Johnston","Mecklenburg"].includes((county || "").trim())) {
+    alert("County must be Wake, Johnston, or Mecklenburg.");
+    return;
+  }
+  if(parcels.length >= 12) {
+    alert("This prototype is limited to 12 sites. Archive a site before adding another.");
+    return;
+  }
   const gross = Number(prompt("Gross acreage:", "200"));
   if(!Number.isFinite(gross) || gross <= 0) {
     alert("Enter a positive acreage.");
