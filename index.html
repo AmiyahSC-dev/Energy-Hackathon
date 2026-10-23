@@ -1,651 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Parcel Feasibility | Elena</title>
-
-<link rel="stylesheet"
- href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parcel Intelligence | SunGrid</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root {
-  --green:#16834a;
-  --green-bg:#eaf7ef;
-  --red:#cf3535;
-  --red-bg:#fff0ef;
-  --yellow:#a66d08;
-  --yellow-bg:#fff6df;
-  --ink:#192820;
-  --muted:#708078;
-  --line:#e3e9e4;
-  --bg:#f4f7f5;
-}
-* {box-sizing:border-box}
-body {
-  margin:0;background:var(--bg);color:var(--ink);
-  font:14px/1.5 Inter,Arial,sans-serif
-}
-header {
-  background:#123b2b;color:white;padding:20px 26px;
-  display:flex;justify-content:space-between;align-items:center;
-  gap:16px
-}
-h1,h2,h3,p {margin-top:0}
-h1 {font-size:22px;margin-bottom:3px}
-h2 {font-size:17px;margin-bottom:15px}
-h3 {font-size:14px;margin-bottom:8px}
-header p {color:#c8dfd1;margin-bottom:0;font-size:12px}
-main {padding:22px;max-width:1600px;margin:auto}
-.topbar {
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px;flex-wrap:wrap;margin-bottom:18px
-}
-.eyebrow {color:var(--muted);font-size:11px;
-  font-weight:750;letter-spacing:1px;text-transform:uppercase}
-.layout {
-  display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);
-  gap:18px
-}
-.panel {
-  background:white;border:1px solid var(--line);
-  border-radius:13px;padding:19px;min-width:0
-}
-.metrics {
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:10px;margin-bottom:18px
-}
-.metric-card {
-  background:white;border:1px solid var(--line);
-  border-radius:11px;padding:15px
-}
-.metric-card .number {font-size:24px;font-weight:750;margin:5px 0}
-.muted {color:var(--muted);font-size:12px}
-#map {height:420px;border-radius:10px;z-index:0}
-.legend {display:flex;gap:13px;flex-wrap:wrap;margin-top:12px}
-.legend span {font-size:12px}
-.dot {display:inline-block;width:9px;height:9px;
-  border-radius:50%;margin-right:5px}
-.g {background:var(--green)}
-.y {background:#eab308}
-.r {background:var(--red)}
-.row {
-  display:flex;align-items:flex-start;justify-content:space-between;
-  gap:12px;padding:12px 0;border-bottom:1px solid #edf0ed
-}
-.row:last-child {border-bottom:0}
-.row .detail {flex:1}
-.row strong {text-align:right}
-.badge {
-  display:inline-block;border-radius:5px;padding:3px 7px;
-  font-size:11px;font-weight:750;white-space:nowrap
-}
-.good {background:var(--green-bg);color:var(--green)}
-.warn {background:var(--yellow-bg);color:var(--yellow)}
-.bad {background:var(--red-bg);color:var(--red)}
-.neutral {background:#edf0ed;color:#526158}
-.score-box {
-  border-radius:11px;padding:18px;margin-bottom:15px;
-  background:var(--green-bg)
-}
-.score {
-  font-size:38px;line-height:1.2;font-weight:800;
-  color:var(--green);margin:5px 0
-}
-.progress {
-  height:8px;border-radius:8px;background:#e7ece8;overflow:hidden
-}
-.progress span {
-  display:block;height:100%;background:var(--green);
-  width:0%;transition:width .2s
-}
-input,select {
-  max-width:100%;padding:9px;border:1px solid #d6ded8;
-  border-radius:7px;background:white;color:var(--ink)
-}
-label {font-size:12px;font-weight:650}
-.controls {
-  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
-  margin:12px 0
-}
-button {
-  border:1px solid var(--line);background:white;color:var(--ink);
-  border-radius:8px;padding:10px 13px;font-weight:700;
-  cursor:pointer
-}
-button:hover {filter:brightness(.96)}
-.primary {background:#176b43;color:white;border-color:#176b43}
-.danger {color:var(--red)}
-.full {width:100%;margin-top:12px}
-.logic {
-  background:#f7faf7;border:1px solid var(--line);
-  padding:13px;border-radius:9px;margin-top:15px
-}
-.logic p {margin:7px 0;font-size:12px}
-table {border-collapse:collapse;width:100%;font-size:12px}
-th,td {padding:10px;text-align:left;border-bottom:1px solid var(--line)}
-th {color:var(--muted);font-size:11px;text-transform:uppercase}
-.table-wrap {overflow-x:auto}
-.parcel-list {margin-top:18px}
-.parcel-item {
-  display:flex;align-items:center;gap:10px;padding:11px 0;
-  border-bottom:1px solid var(--line)
-}
-.parcel-item button {padding:6px 9px;font-size:11px}
-.parcel-item .parcel-info {flex:1;min-width:0}
-.parcel-item .parcel-info strong {display:block}
-.small {font-size:11px;color:var(--muted)}
-.footnote {font-size:11px;color:var(--muted);margin-top:15px}
-@media(max-width:950px) {
-  .layout {grid-template-columns:1fr}
-  main {padding:12px}
-}
-@media(max-width:520px) {
-  .metrics {grid-template-columns:1fr 1fr}
-  header {padding:16px}
-  #map {height:340px}
-}
-@media print {
-  body {background:white;font-size:11px}
-  header,.map-panel,.topbar,.parcel-list,.no-print {display:none!important}
-  main {padding:0;max-width:none}
-  .layout {display:block}
-  .panel {border:0;padding:0}
-  .score-box,.logic {background:white;border:1px solid #ddd}
-  .metrics {grid-template-columns:repeat(3,1fr)}
-  .footnote {font-size:9px}
-  .row {padding:6px 0}
-  @page {size:letter;margin:12mm}
-}
+:root{--green:#16834a;--green-dark:#123b2b;--green-bg:#eaf7ef;--red:#cf3535;--red-bg:#fff0ef;--yellow:#a66d08;--yellow-bg:#fff6df;--ink:#192820;--muted:#708078;--line:#e3e9e4;--bg:#f4f7f5;--cyan:#177d75}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,Arial,sans-serif}header{background:var(--green-dark);color:white;padding:20px 26px;display:flex;justify-content:space-between;align-items:center;gap:16px}h1,h2,h3,p{margin-top:0}h1{font-size:22px;margin-bottom:3px}h2{font-size:17px;margin-bottom:13px}h3{font-size:14px;margin-bottom:8px}header p{color:#c8dfd1;margin:0;font-size:12px}main{padding:22px;max-width:1700px;margin:auto}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}.eyebrow{color:var(--muted);font-size:11px;font-weight:750;letter-spacing:1px;text-transform:uppercase}.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(340px,1fr);gap:18px}.panel{background:white;border:1px solid var(--line);border-radius:13px;padding:19px;min-width:0}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}.metric-card{background:white;border:1px solid var(--line);border-radius:11px;padding:15px}.number{font-size:24px;font-weight:750;margin:5px 0}.muted{color:var(--muted);font-size:12px}.small{font-size:11px;color:var(--muted)}#map{height:470px;border-radius:10px;z-index:0}.legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:12px}.legend span{font-size:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}.g{background:var(--green)}.y{background:#d5a018}.r{background:var(--red)}.row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf0ed}.row:last-child{border-bottom:0}.row .detail{flex:1}.row strong{text-align:right}.badge{display:inline-block;border-radius:5px;padding:3px 7px;font-size:11px;font-weight:750;white-space:nowrap}.good{background:var(--green-bg);color:var(--green)}.warn{background:var(--yellow-bg);color:var(--yellow)}.bad{background:var(--red-bg);color:var(--red)}.neutral{background:#edf0ed;color:#526158}.score-box{border-radius:11px;padding:18px;margin-bottom:15px;background:var(--green-bg)}.score{font-size:38px;line-height:1.2;font-weight:800;color:var(--green);margin:5px 0}.progress{height:8px;border-radius:8px;background:#e7ece8;overflow:hidden}.progress span{display:block;height:100%;background:var(--green);width:0%;transition:width .2s}input,select{max-width:100%;padding:9px;border:1px solid #d6ded8;border-radius:7px;background:white;color:var(--ink)}input[type=range]{padding:0;accent-color:var(--green)}label{font-size:12px;font-weight:650}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}.filters{display:grid;grid-template-columns:1fr;gap:18px}.filter-block{padding-bottom:15px;border-bottom:1px solid var(--line)}.filter-block:last-child{border:0;padding-bottom:0}.toggleline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0}.toggleline input{width:17px;height:17px;accent-color:var(--green)}button{border:1px solid var(--line);background:white;color:var(--ink);border-radius:8px;padding:9px 12px;font-weight:700;cursor:pointer}button:hover{filter:brightness(.96)}.primary{background:#176b43;color:white;border-color:#176b43}.danger{color:var(--red)}.full{width:100%;margin-top:12px}.logic{background:#f7faf7;border:1px solid var(--line);padding:13px;border-radius:9px;margin-top:15px}.logic p{margin:7px 0;font-size:12px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px}tbody tr{cursor:pointer}tbody tr:hover{background:#f5faf6}tbody tr.selected{background:#eaf7ef}.table-wrap{overflow:auto}.parcel-list{margin-top:18px}.parcel-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.parcel-info{flex:1;min-width:0}.parcel-info strong{display:block}.footnote{font-size:11px;color:var(--muted);margin-top:15px}.slider-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.slider-value{font-weight:750;color:var(--green);font-variant-numeric:tabular-nums}.pipeline{background:#f7faf7;border:1px solid var(--line);padding:13px;border-radius:9px}.statusline{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}.empty{padding:20px;text-align:center;color:var(--muted)}.leaflet-popup-content button{margin-top:7px;padding:6px 9px}.leaflet-container{font:12px Inter,Arial,sans-serif}
+@media(max-width:1050px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){main{padding:12px}header{padding:16px;align-items:flex-start;flex-direction:column}.metrics{grid-template-columns:1fr 1fr}#map{height:340px}.panel{padding:14px}.number{font-size:21px}}@media print{body{background:white;font-size:11px}header,.map-panel,.topbar,.filters-panel,.no-print{display:none!important}main{padding:0;max-width:none}.layout{display:block}.panel{border:0;padding:0}.score-box,.logic{background:white;border:1px solid #ddd}.metrics{grid-template-columns:repeat(4,1fr)}.footnote{font-size:9px}.row{padding:6px 0}@page{size:letter landscape;margin:12mm}}
 </style>
 </head>
-
 <body>
-<header>
-  <div>
-    <h1>Parcel Intelligence</h1>
-    <p>10 sample sites · Wake, Johnston & Mecklenburg Counties</p>
-  </div>
-  <div>ELENA'S WORKSPACE</div>
-</header>
-
+<header><div><h1>Parcel Intelligence</h1><p>SunGrid Greenfield Pipeline · North Carolina screening prototype</p></div><div><strong>SUNGRID WORKSPACE</strong><div class="small" style="color:#c8dfd1;text-align:right">SIMULATION MODE</div></div></header>
 <main>
-  <div class="topbar">
-    <div>
-      <div class="eyebrow">Land acquisition / early feasibility</div>
-      <h2 style="margin:5px 0">Parcel Screening Dashboard</h2>
-      <div class="muted">Evaluate individual parcels before assembling sites.</div>
-    </div>
-    <div class="controls no-print">
-      <button onclick="addParcel()">+ Add parcel</button>
-      <button onclick="showArchived()">View archived</button>
-      <button onclick="window.print()">Export briefing PDF</button>
-    </div>
-  </div>
-
+  <div class="topbar"><div><div class="eyebrow">Land acquisition / early feasibility</div><h2 style="margin:5px 0">Parcel Screening Dashboard</h2><div class="muted">Screen candidate parcels, apply environmental and infrastructure constraints, and review the highest-ranked sites.</div></div><div class="controls no-print"><button onclick="resetFilters()">Reset filters</button><button onclick="window.print()">Export briefing PDF</button></div></div>
   <section class="metrics">
-    <div class="metric-card">
-      <div class="muted">Active parcels</div>
-      <div class="number" id="activeCount">3</div>
-      <div class="small">Individual records</div>
-    </div>
-    <div class="metric-card">
-      <div class="muted">Combined net acreage</div>
-      <div class="number" id="netTotal">—</div>
-      <div class="small">Active parcel estimates</div>
-    </div>
-    <div class="metric-card">
-      <div class="muted">Site assembly target</div>
-      <div class="number">500–700+</div>
-      <div class="small">Usable contiguous acres</div>
-    </div>
+    <div class="metric-card"><div class="muted">Candidate parcels</div><div class="number" id="candidateCount">80</div><div class="small">Synthetic sample records</div></div>
+    <div class="metric-card"><div class="muted">Sites passing filters</div><div class="number" id="passingCount">—</div><div class="small">Before top-10 limit</div></div>
+    <div class="metric-card"><div class="muted">Top sites shown</div><div class="number" id="topCount">—</div><div class="small">Ranked by screening score</div></div>
+    <div class="metric-card"><div class="muted">Top 10 usable acres</div><div class="number" id="topAcres">—</div><div class="small">Estimated acreage total</div></div>
   </section>
-
   <div class="layout">
     <section class="panel map-panel">
-      <h2>1. Parcel map</h2>
-      <div class="controls no-print">
-        <label for="filter">Filter parcels</label>
-        <select id="filter" onchange="renderMap()">
-          <option value="all">All active</option>
-          <option value="good">Higher score (70+)</option>
-          <option value="review">Needs review (45–69)</option>
-          <option value="low">Low score (under 45)</option>
-        </select>
-        <label for="countyFilter">County</label>
-        <select id="countyFilter" onchange="renderMap(); updateDashboard()">
-          <option value="all">All target counties</option>
-          <option value="Wake">Wake</option>
-          <option value="Johnston">Johnston</option>
-          <option value="Mecklenburg">Mecklenburg</option>
-        </select>
-      </div>
+      <div class="statusline"><h2>1. Parcel map</h2><span class="badge neutral">Leaflet · OpenStreetMap</span></div>
       <div id="map"></div>
-      <div class="legend">
-        <span><i class="dot g"></i>Higher score</span>
-        <span><i class="dot y"></i>Needs review</span>
-        <span><i class="dot r"></i>Low score / potential exclusion</span>
-      </div>
-      <p class="footnote">
-        Scores are screening indicators, not proof of development feasibility.
-        All 10 site records, polygon geometry, and attributes are synthetic demo data—not verified properties.
-      </p>
-      <div class="parcel-list no-print">
-        <h3>Active parcels</h3>
-        <div id="parcelList"></div>
-      </div>
+      <div class="legend"><span><i class="dot g"></i>High score (80+)</span><span><i class="dot y"></i>Moderate score (60–79)</span><span><i class="dot r"></i>Lower score (&lt;60)</span></div>
+      <p class="footnote">Map markers and parcel outlines are illustrative approximations. Wetlands, FEMA status, acreage, and distance values are synthetic demo attributes—not official GIS or property records.</p>
+      <div class="parcel-list"><h3>Top-ranked sites</h3><div class="table-wrap"><table><thead><tr><th>Rank</th><th>Parcel</th><th>County</th><th>Acres</th><th>HV dist.</th><th>Wetlands</th><th>FEMA</th><th>Score</th></tr></thead><tbody id="rankedRows"></tbody></table></div><div id="emptyResults" class="empty" hidden>No sites match these constraints. Widen the HV distance or turn off an exclusion filter.</div></div>
     </section>
-
-    <section class="panel">
-      <div class="eyebrow">Selected parcel</div>
-      <div class="controls no-print">
-        <select id="parcelSelect" onchange="selectParcel(this.value)"
-          aria-label="Choose parcel"></select>
+    <aside class="panel filters-panel">
+      <div class="eyebrow">Site constraints</div><h2 style="margin-top:5px">Screening filters</h2>
+      <div class="filters">
+        <div class="filter-block"><label for="countyFilter">Regional target (NC county)</label><select id="countyFilter" style="display:block;width:100%;margin-top:7px" onchange="renderDashboard()"><option>All</option><option>Mecklenburg</option><option>Wake</option><option>Guilford</option><option>Forsyth</option><option>Durham</option></select></div>
+        <div class="filter-block"><div class="slider-head"><label for="distanceFilter">Max high-voltage distance</label><span class="slider-value" id="distanceLabel">3.0 mi</span></div><input id="distanceFilter" type="range" min="1" max="10" step="0.5" value="3" style="width:100%;margin-top:14px" oninput="document.getElementById('distanceLabel').textContent=Number(this.value).toFixed(1)+' mi';renderDashboard()"><div class="statusline small"><span>1.0 mi</span><span>10.0 mi</span></div></div>
+        <div class="filter-block"><div class="toggleline"><label for="excludeWetlands">Exclude NWI wetlands</label><input id="excludeWetlands" type="checkbox" checked onchange="renderDashboard()"></div><div class="toggleline"><label for="excludeFEMA">Exclude FEMA zones (A/AE/X)</label><input id="excludeFEMA" type="checkbox" checked onchange="renderDashboard()"></div><p class="small">Exclusions are based on mock yes/no flags for prototype testing only.</p></div>
       </div>
-
-      <div class="score-box">
-        <div class="muted">PRELIMINARY PARCEL SCORE</div>
-        <div class="score" id="score">—</div>
-        <strong id="status">Select a parcel</strong>
-        <p class="muted" id="parcelName"></p>
-        <div class="progress"><span id="scoreBar"></span></div>
-      </div>
-
-      <h3>Parcel metrics</h3>
-      <div id="metrics"></div>
-
-      <div class="logic">
-        <h3>Transparent logic</h3>
-        <div id="explanation"></div>
-      </div>
-
-      <div class="logic">
-        <h3>Site assembly readiness</h3>
-        <p id="assemblyText"></p>
-        <div class="progress"><span id="assemblyBar"></span></div>
-        <p class="muted">
-          Assembly progress uses active parcel estimates as a rough planning
-          indicator. It does not establish contiguity or a viable site.
-        </p>
-      </div>
-
-      <div class="controls no-print">
-        <button class="danger" onclick="archiveSelected()">× Archive old parcel</button>
-        <button onclick="editSelected()">Edit parcel data</button>
-      </div>
-      <button class="primary full no-print" onclick="window.print()">
-        Export Parcel Briefing Card ↗
-      </button>
-
-      <div class="footnote">
-        <b>Important:</b> Preliminary feasibility only. Verify environmental
-        constraints, usable acreage, land control, interconnection capacity,
-        and applicable permitting requirements.
-        <div id="reportDate"></div>
-      </div>
-    </section>
+      <div class="pipeline" style="margin-top:18px"><div class="eyebrow">Active pipeline</div><div class="number" style="margin:4px 0" id="pipelineValue">—</div><div class="muted">Highest-scoring sites that pass the current filters (maximum 10 displayed).</div></div>
+      <div class="controls"><label for="parcelSelect">Selected parcel</label><select id="parcelSelect" style="flex:1;min-width:170px" onchange="selectParcel(this.value)"></select></div>
+      <div class="score-box"><div class="muted">PRELIMINARY SUITABILITY SCORE</div><div class="score" id="score">—</div><strong id="scoreStatus">Select a parcel</strong><p class="muted" id="parcelName"></p><div class="progress"><span id="scoreBar"></span></div></div>
+      <h3>Selected parcel metrics</h3><div id="parcelMetrics"></div>
+      <div class="logic"><h3>Score breakdown</h3><div id="scoreBreakdown"></div><p><b>Model note:</b> score is a prototype ranking indicator, not a validated feasibility determination.</p></div>
+      <button class="primary full no-print" onclick="window.print()">Export Parcel Briefing Card ↗</button>
+      <div class="footnote"><b>Important:</b> Verify parcel boundaries, ownership, environmental constraints, usable acreage, transmission capacity, interconnection availability, and permitting before making acquisition decisions.<div id="reportDate"></div></div>
+    </aside>
   </div>
 </main>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-/*
-  DEMO DATA ONLY.
-  Replace with actual parcel polygons, terrain analysis, wetlands data,
-  transmission information, and verified interconnection points.
-*/
-let parcels = [
-  {id:"S-001",name:"Wake North",county:"Wake",active:true,gross:540,usable:465,wetland:5,steep:8,grid:0.8,crossings:1,nearLines:2,lat:35.90,lng:-78.70},
-  {id:"S-002",name:"Wake East",county:"Wake",active:true,gross:420,usable:340,wetland:10,steep:12,grid:1.4,crossings:1,nearLines:3,lat:35.78,lng:-78.45},
-  {id:"S-003",name:"Wake South",county:"Wake",active:true,gross:390,usable:300,wetland:8,steep:9,grid:2.0,crossings:2,nearLines:4,lat:35.62,lng:-78.72},
-  {id:"S-004",name:"Wake West",county:"Wake",active:true,gross:460,usable:370,wetland:12,steep:10,grid:1.6,crossings:1,nearLines:2,lat:35.77,lng:-78.90},
-  {id:"S-005",name:"Johnston North",county:"Johnston",active:true,gross:510,usable:420,wetland:7,steep:6,grid:1.1,crossings:1,nearLines:2,lat:35.63,lng:-78.52},
-  {id:"S-006",name:"Johnston Central",county:"Johnston",active:true,gross:440,usable:350,wetland:14,steep:11,grid:2.3,crossings:2,nearLines:4,lat:35.51,lng:-78.35},
-  {id:"S-007",name:"Johnston South",county:"Johnston",active:true,gross:360,usable:270,wetland:18,steep:15,grid:2.8,crossings:3,nearLines:5,lat:35.38,lng:-78.37},
-  {id:"S-008",name:"Mecklenburg North",county:"Mecklenburg",active:true,gross:480,usable:390,wetland:9,steep:10,grid:1.2,crossings:1,nearLines:3,lat:35.38,lng:-80.82},
-  {id:"S-009",name:"Mecklenburg East",county:"Mecklenburg",active:true,gross:400,usable:310,wetland:16,steep:13,grid:2.1,crossings:2,nearLines:4,lat:35.22,lng:-80.65},
-  {id:"S-010",name:"Mecklenburg South",county:"Mecklenburg",active:true,gross:530,usable:440,wetland:6,steep:7,grid:0.9,crossings:1,nearLines:2,lat:35.08,lng:-80.84}
-];
-
-let selectedId = "S-001";
-let polygons = [];
-let archivedView = false;
-
-const map = L.map("map").setView([35.52,-79.55],7);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom:19,
-  attribution:"&copy; OpenStreetMap contributors"
-}).addTo(map);
-
-function currentParcels() {
-  const county = document.getElementById("countyFilter")?.value || "all";
-  return parcels.filter(p => p.active === !archivedView && (county === "all" || p.county === county));
-}
-
-function getParcel(id) {
-  return parcels.find(p => p.id === id);
-}
-
-function scoreParcel(p) {
-  // Example weighting, intended for prototype testing only.
-  // Weights total 100. Thresholds should be calibrated with domain experts.
-  const acreage = Math.min(100, p.usable / 500 * 100);
-  const wetlands = Math.max(0, 100 - p.wetland * 2);
-  const slope = Math.max(0, 100 - p.steep * 2);
-  const interconnection = Math.max(0, 100 - p.grid / 3 * 100);
-  const transmission = Math.max(
-    0, 100 - p.crossings * 12 - Math.max(0,p.nearLines-3)*5
-  );
-
-  const score = Math.round(
-    acreage * .25 +
-    wetlands * .20 +
-    slope * .20 +
-    interconnection * .20 +
-    transmission * .15
-  );
-
-  return {
-    score,
-    components:[
-      {name:"Usable acreage",value:acreage,weight:25,
-       evidence:`${p.usable} estimated usable acres`},
-      {name:"Wetlands",value:wetlands,weight:20,
-       evidence:`${p.wetland}% estimated wetland overlap`},
-      {name:"Terrain slope",value:slope,weight:20,
-       evidence:`${p.steep}% estimated steep area`},
-      {name:"Interconnection proximity",value:interconnection,weight:20,
-       evidence:`${p.grid} miles to candidate connection point`},
-      {name:"Transmission constraints",value:transmission,weight:15,
-       evidence:`${p.crossings} crossings; ${p.nearLines} nearby lines (reported)`}
-    ]
-  };
-}
-
-function colorFor(score) {
-  if(score >= 70) return "#16834a";
-  if(score >= 45) return "#d5a018";
-  return "#cf3535";
-}
-
-function labelFor(score) {
-  if(score >= 70) return "Higher screening score";
-  if(score >= 45) return "Needs review";
-  return "Low score — investigate exclusions";
-}
-
-function renderMap() {
-  polygons.forEach(layer => map.removeLayer(layer));
-  polygons = [];
-
-  const filter = document.getElementById("filter").value;
-
-  currentParcels().forEach(p => {
-    const score = scoreParcel(p).score;
-    if(filter === "good" && score < 70) return;
-    if(filter === "review" && (score < 45 || score >= 70)) return;
-    if(filter === "low" && score >= 45) return;
-
-    // Demo rectangle only. Use real parcel boundary GeoJSON in production.
-    const bounds = [
-      [p.lat,p.lng],
-      [p.lat,p.lng+0.018],
-      [p.lat+0.014,p.lng+0.018],
-      [p.lat+0.014,p.lng]
-    ];
-
-    const layer = L.polygon(bounds,{
-      color:colorFor(score),
-      fillColor:colorFor(score),
-      fillOpacity:p.id === selectedId ? .55 : .28,
-      weight:p.id === selectedId ? 4 : 2
-    }).addTo(map);
-
-    layer.bindTooltip(`${p.id} · ${score}/100`);
-    layer.bindPopup(
-      `<b>${p.id}: ${p.name}</b><br>${p.county} County<br>`+
-      `${p.usable} estimated usable acres<br>`+
-      `${score}/100 · ${labelFor(score)}<br>`+
-      `<button onclick="window.chooseParcel('${p.id}')">Open parcel</button>`
-    );
-    layer.on("click",() => selectParcel(p.id));
-    polygons.push(layer);
-  });
-
-  renderParcelList();
-
-  // Keep the map framed around the currently visible demo sites.
-  if (polygons.length) {
-    const group = L.featureGroup(polygons);
-    map.fitBounds(group.getBounds().pad(0.12), { maxZoom: 9 });
-  }
-  // Correct map sizing if the browser has just finished laying out the page.
-  setTimeout(() => map.invalidateSize(), 100);
-}
-
-function renderParcelList() {
-  const active = currentParcels();
-  document.getElementById("parcelList").innerHTML = active.length
-    ? active.map(p => `
-      <div class="parcel-item">
-        <div class="parcel-info">
-          <strong>${p.id} · ${p.name}</strong>
-          <span class="small">${p.usable} usable acres ·
-            ${scoreParcel(p).score}/100</span>
-        </div>
-        <button onclick="selectParcel('${p.id}')">Open</button>
-      </div>`).join("")
-    : '<p class="muted">No parcels in this view.</p>';
-}
-
-function selectParcel(id) {
-  const p = getParcel(id);
-  if(!p || p.active === false) return;
-  selectedId = id;
-  archivedView = false;
-  document.getElementById("filter").value = "all";
-  document.getElementById("parcelSelect").value = id;
-  updateDashboard();
-  renderMap();
-}
-
-function updateDashboard() {
-  const countyFilter = document.getElementById("countyFilter")?.value || "all";
-  const active = parcels.filter(p => p.active && (countyFilter === "all" || p.county === countyFilter));
-  const p = getParcel(selectedId);
-
-  document.getElementById("activeCount").textContent = active.length;
-  document.getElementById("netTotal").textContent =
-    active.reduce((sum,p) => sum+p.usable,0).toLocaleString();
-
-  const selector = document.getElementById("parcelSelect");
-  selector.innerHTML = active.map(p =>
-    `<option value="${p.id}">${p.id} — ${p.name}</option>`
-  ).join("");
-
-  if(!p || !p.active || (countyFilter !== "all" && p.county !== countyFilter)) {
-    selectedId = active[0]?.id;
-    if(!selectedId) {
-      document.getElementById("score").textContent = "—";
-      document.getElementById("parcelName").textContent =
-        "No active parcels";
-      document.getElementById("metrics").innerHTML = "";
-      document.getElementById("explanation").innerHTML = "";
-      return;
-    }
-    return updateDashboard();
-  }
-
-  selector.value = p.id;
-  const result = scoreParcel(p);
-  const score = result.score;
-
-  document.getElementById("score").textContent = score + " / 100";
-  document.getElementById("score").style.color = colorFor(score);
-  document.getElementById("scoreBar").style.width = score + "%";
-  document.getElementById("scoreBar").style.background = colorFor(score);
-  document.getElementById("status").textContent = labelFor(score);
-  document.getElementById("parcelName").textContent =
-    `${p.id} · ${p.name} · ${p.county} County · Sample site`;
-  document.getElementById("reportDate").textContent =
-    "Brief generated: " + new Date().toLocaleDateString();
-
-  const items = [
-    ["County",p.county],
-    ["Gross acreage",`${p.gross} acres`],
-    ["Estimated usable acreage",`${p.usable} acres`],
-    ["Wetlands",`${p.wetland}% overlap`],
-    ["Steep terrain",`${p.steep}% of parcel`],
-    ["Distance to connection point",`${p.grid} miles`],
-    ["Transmission crossings",p.crossings],
-    ["Nearby transmission lines",p.nearLines]
-  ];
-
-  document.getElementById("metrics").innerHTML = items.map(([name,value]) =>
-    `<div class="row"><span class="detail">${name}</span>`+
-    `<strong>${value}</strong></div>`
-  ).join("");
-
-  document.getElementById("explanation").innerHTML =
-    result.components.map(c => `
-      <div class="row">
-        <div class="detail">
-          <strong>${c.name}</strong>
-          <div class="muted">${c.evidence}</div>
-          <div class="muted">Weight: ${c.weight}%</div>
-        </div>
-        <span class="badge ${c.value >= 70 ? "good" : c.value >= 45 ? "warn" : "bad"}">
-          ${Math.round(c.value)}/100
-        </span>
-      </div>`).join("") +
-      `<p><b>Calculation:</b> weighted average of the five displayed
-      component scores. This prototype formula is not a validated
-      feasibility model.</p>`;
-
-  // Aggregate acreage is a planning indicator only. It does not establish
-  // contiguity; parcels may overlap, be separated, or lack land control.
-  const net = active.reduce((sum,q) => sum+q.usable,0);
-  const target = 700;
-  document.getElementById("assemblyText").textContent =
-    `${net.toLocaleString()} estimated usable acres across `+
-    `${active.length} active parcels. Target: 500–700+ usable contiguous acres.`;
-  document.getElementById("assemblyBar").style.width =
-    Math.min(100,net/target*100)+"%";
-}
-
-function archiveSelected() {
-  const p = getParcel(selectedId);
-  if(!p) return;
-  if(!confirm(`Archive ${p.id} — ${p.name}? It will be hidden from active screening.`)) return;
-  p.active = false;
-  const next = parcels.find(q => q.active);
-  selectedId = next ? next.id : null;
-  if(selectedId) updateDashboard();
-  else {
-    document.getElementById("score").textContent = "—";
-    document.getElementById("parcelName").textContent = "No active parcels";
-  }
-  renderMap();
-}
-
-function showArchived() {
-  archivedView = !archivedView;
-  const archived = parcels.filter(p => !p.active);
-  if(archivedView && archived.length) {
-    document.getElementById("parcelList").innerHTML = archived.map(p =>
-      `<div class="parcel-item"><div class="parcel-info">
-        <strong>${p.id} · ${p.name}</strong>
-        <span class="small">Archived · ${p.usable} estimated usable acres</span>
-      </div><button onclick="restoreParcel('${p.id}')">Restore</button></div>`
-    ).join("");
-    document.querySelector(".parcel-list h3").textContent = "Archived parcels";
-  } else {
-    archivedView = false;
-    document.querySelector(".parcel-list h3").textContent = "Active parcels";
-    renderMap();
-  }
-}
-
-function restoreParcel(id) {
-  const p = getParcel(id);
-  if(!p) return;
-  p.active = true;
-  archivedView = false;
-  selectedId = id;
-  updateDashboard();
-  renderMap();
-}
-
-function addParcel() {
-  const id = prompt("New parcel ID (e.g. P-005):");
-  if(!id || parcels.some(p => p.id === id.trim())) {
-    if(id) alert("That parcel ID already exists.");
-    return;
-  }
-  const name = prompt("Site name:");
-  if(!name) return;
-  const county = prompt("County (Wake, Johnston, or Mecklenburg):", "Wake");
-  if(!["Wake","Johnston","Mecklenburg"].includes((county || "").trim())) {
-    alert("County must be Wake, Johnston, or Mecklenburg.");
-    return;
-  }
-  if(parcels.length >= 12) {
-    alert("This prototype is limited to 12 sites. Archive a site before adding another.");
-    return;
-  }
-  const gross = Number(prompt("Gross acreage:", "200"));
-  if(!Number.isFinite(gross) || gross <= 0) {
-    alert("Enter a positive acreage.");
-    return;
-  }
-
-  const lat = 35.25 + Math.random()*.07;
-  const lng = -80.93 + Math.random()*.07;
-  parcels.push({
-    id:id.trim(),name:name.trim(),active:true,
-    gross,usable:gross,wetland:0,steep:0,grid:3,
-    crossings:0,nearLines:0,lat,lng
-  });
-  selectedId = id.trim();
-  updateDashboard();
-  renderMap();
-}
-
-function editSelected() {
-  const p = getParcel(selectedId);
-  if(!p) return;
-  const fields = [
-    ["gross","Gross acreage"],
-    ["usable","Estimated usable acreage"],
-    ["wetland","Wetlands overlap (%)"],
-    ["steep","Steep area (%)"],
-    ["grid","Distance to interconnection point (miles)"],
-    ["crossings","Transmission crossings"],
-    ["nearLines","Nearby transmission lines"]
-  ];
-
-  for(const [key,label] of fields) {
-    const value = prompt(label,p[key]);
-    if(value === null) return;
-    const n = Number(value);
-    if(!Number.isFinite(n) || n < 0) {
-      alert("Enter a valid non-negative number.");
-      return;
-    }
-    p[key] = n;
-  }
-
-  if(p.usable > p.gross || p.wetland > 100 || p.steep > 100) {
-    alert("Check the data: usable acres cannot exceed gross acres, and percentages cannot exceed 100.");
-    return;
-  }
-  updateDashboard();
-  renderMap();
-}
-
-window.chooseParcel = selectParcel;
-updateDashboard();
-renderMap();
+// DEMO ONLY: seeded pseudo-random generator keeps the 80 sample records stable between page loads.
+const counties={
+  Mecklenburg:{lat:35.28,lng:-80.84,spread:.19},Wake:{lat:35.78,lng:-78.64,spread:.22},
+  Guilford:{lat:36.07,lng:-79.79,spread:.18},Forsyth:{lat:36.10,lng:-80.25,spread:.15},Durham:{lat:35.99,lng:-78.90,spread:.13}
+};
+function seeded(seed){return function(){let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+const rand=seeded(20261023);const countyNames=Object.keys(counties);
+let parcels=Array.from({length:80},(_,idx)=>{const county=countyNames[idx%countyNames.length],c=counties[county],a=rand()*Math.PI*2,r=Math.sqrt(rand())*c.spread;const acreage=Math.floor(50+rand()*351),wetlands=rand()>.65,fema=rand()>.75,distance=Number((1+rand()*9).toFixed(1));const base=Math.floor(rand()*101);return{id:`NC-${county.slice(0,3).toUpperCase()}-${String(idx+1).padStart(3,'0')}`,county,acreage,hasWetlands:wetlands,hasFEMA:fema,distance,base,lat:c.lat+Math.sin(a)*r,lng:c.lng+Math.cos(a)*r};});
+let selectedId=null;let map, layers=[];
+function scoreParcel(p){let score=Math.round(p.base*.55+Math.min(100,p.acreage/400*100)*.25+(p.hasWetlands?0:100)*.08+(p.hasFEMA?0:100)*.07+Math.max(0,100-p.distance*10)*.05);return Math.max(0,Math.min(100,score))}
+function colorFor(s){return s>=80?'#16834a':s>=60?'#d5a018':'#cf3535'}
+function statusFor(s){return s>=80?'Higher screening score':s>=60?'Moderate — review constraints':'Lower screening score'}
+function getFiltered(){const county=document.getElementById('countyFilter').value,max=Number(document.getElementById('distanceFilter').value),ew=document.getElementById('excludeWetlands').checked,ef=document.getElementById('excludeFEMA').checked;return parcels.filter(p=>(county==='All'||p.county===county)&&p.distance<=max&&(!ew||!p.hasWetlands)&&(!ef||!p.hasFEMA)).map(p=>({...p,score:scoreParcel(p)})).sort((a,b)=>b.score-a.score).slice(0,10)}
+function initMap(){map=L.map('map').setView([35.78,-79.35],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(map)}
+function renderDashboard(){if(!map)return;const visible=getFiltered();const county=document.getElementById('countyFilter').value;const candidates=parcels.filter(p=>county==='All'||p.county===county);document.getElementById('candidateCount').textContent=candidates.length;document.getElementById('passingCount').textContent=visible.length;document.getElementById('topCount').textContent=visible.length;document.getElementById('topAcres').textContent=visible.reduce((s,p)=>s+p.acreage,0).toLocaleString();document.getElementById('pipelineValue').textContent=visible.length+' sites found';
+  layers.forEach(l=>map.removeLayer(l));layers=[];visible.forEach(p=>{const col=colorFor(p.score),bounds=[[p.lat-.012,p.lng-.016],[p.lat-.012,p.lng+.016],[p.lat+.012,p.lng+.016],[p.lat+.012,p.lng-.016]];const poly=L.polygon(bounds,{color:col,fillColor:col,fillOpacity:p.id===selectedId ? .48 : .25,weight:p.id===selectedId?3:1.5}).addTo(map);poly.bindTooltip(`${p.id} · ${p.score}/100`);poly.bindPopup(`<b>${p.id}</b><br>${p.county} County<br>${p.acreage} estimated acres<br>${p.distance.toFixed(1)} mi to candidate HV point<br>Score: ${p.score}/100<br><button onclick="selectParcel('${p.id}')">Open parcel</button>`);poly.on('click',()=>selectParcel(p.id));layers.push(poly)});if(layers.length)map.fitBounds(L.featureGroup(layers).getBounds().pad(.12),{maxZoom:9});setTimeout(()=>map.invalidateSize(),80);
+  document.getElementById('rankedRows').innerHTML=visible.map((p,i)=>`<tr class="${p.id===selectedId?'selected':''}" onclick="selectParcel('${p.id}')"><td>${i+1}</td><td><strong>${p.id}</strong></td><td>${p.county}</td><td>${p.acreage}</td><td>${p.distance.toFixed(1)} mi</td><td><span class="badge ${p.hasWetlands?'warn':'good'}">${p.hasWetlands?'Flagged':'No flag'}</span></td><td><span class="badge ${p.hasFEMA?'bad':'good'}">${p.hasFEMA?'Flagged':'No flag'}</span></td><td><span class="badge ${p.score>=80?'good':p.score>=60?'warn':'bad'}">${p.score}</span></td></tr>`).join('');document.getElementById('emptyResults').hidden=visible.length>0;
+  const select=document.getElementById('parcelSelect');select.innerHTML=visible.map(p=>`<option value="${p.id}">${p.id} — ${p.county}</option>`).join('');if(!visible.some(p=>p.id===selectedId))selectedId=visible[0]?.id||null;if(selectedId){select.value=selectedId;renderSelected()}else{select.innerHTML='<option value="">No matching sites</option>';renderEmptySelected()}document.getElementById('reportDate').textContent='Brief generated: '+new Date().toLocaleDateString();}
+function selectParcel(id){if(!id)return;selectedId=id;renderDashboard()}
+function renderSelected(){const p=parcels.find(x=>x.id===selectedId);if(!p)return renderEmptySelected();const score=scoreParcel(p);document.getElementById('score').textContent=score+' / 100';document.getElementById('score').style.color=colorFor(score);document.getElementById('scoreBar').style.width=score+'%';document.getElementById('scoreBar').style.background=colorFor(score);document.getElementById('scoreStatus').textContent=statusFor(score);document.getElementById('parcelName').textContent=`${p.id} · ${p.county} County · Sample parcel`;const rows=[['County',p.county],['Estimated acreage',p.acreage+' acres'],['HV distance',p.distance.toFixed(1)+' miles'],['NWI wetlands flag',p.hasWetlands?'Potential overlap':'No demo flag'],['FEMA flag',p.hasFEMA?'Potential zone overlap':'No demo flag']];document.getElementById('parcelMetrics').innerHTML=rows.map(([k,v])=>`<div class="row"><span class="detail">${k}</span><strong>${v}</strong></div>`).join('');const components=[['Base suitability',Math.round(p.base*.55/.55),55,'Synthetic base score'],['Acreage',Math.min(100,p.acreage/400*100),25,`${p.acreage} estimated acres`],['Wetlands',p.hasWetlands?0:100,8,p.hasWetlands?'Wetlands flag present':'No wetlands flag'],['FEMA',p.hasFEMA?0:100,7,p.hasFEMA?'FEMA flag present':'No FEMA flag'],['HV proximity',Math.max(0,100-p.distance*10),5,`${p.distance.toFixed(1)} miles (closer scores higher)`]];document.getElementById('scoreBreakdown').innerHTML=components.map(([name,val,weight,evidence])=>`<div class="row"><div class="detail"><strong>${name}</strong><div class="muted">${evidence}</div><div class="muted">Weight: ${weight}%</div></div><span class="badge ${val>=70?'good':val>=45?'warn':'bad'}">${Math.round(val)}/100</span></div>`).join('')}
+function renderEmptySelected(){document.getElementById('score').textContent='—';document.getElementById('scoreStatus').textContent='No matching parcels';document.getElementById('parcelName').textContent='Adjust the filters to view a site.';document.getElementById('scoreBar').style.width='0%';document.getElementById('parcelMetrics').innerHTML='';document.getElementById('scoreBreakdown').innerHTML=''}
+function resetFilters(){document.getElementById('countyFilter').value='All';document.getElementById('distanceFilter').value='3';document.getElementById('distanceLabel').textContent='3.0 mi';document.getElementById('excludeWetlands').checked=true;document.getElementById('excludeFEMA').checked=true;renderDashboard()}
+document.addEventListener('DOMContentLoaded',()=>{initMap();renderDashboard()});
 </script>
-</body>
-</html>
+</body></html>
