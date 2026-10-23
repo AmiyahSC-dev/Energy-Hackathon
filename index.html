@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Elena | Parcel Screening</title>
+
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      color: #17251f;
+      background: #f4f7f5;
+    }
+
+    header {
+      padding: 20px 28px;
+      background: #123b2b;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 { margin: 0; font-size: 22px; }
+    header p { margin: 5px 0 0; color: #c7dfd1; font-size: 13px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+      gap: 20px;
+      padding: 22px;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid #e0e8e2;
+      border-radius: 14px;
+      padding: 20px;
+      min-width: 0;
+    }
+
+    h2 { margin: 0 0 16px; font-size: 17px; }
+
+    #map {
+      height: 460px;
+      border-radius: 10px;
+      z-index: 0;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 15px;
+      font-size: 13px;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    .green { background: #16a34a; }
+    .red { background: #dc2626; }
+    .yellow { background: #eab308; }
+
+    .score-box {
+      padding: 18px;
+      background: #f0f8f2;
+      border-radius: 10px;
+      margin-bottom: 18px;
+    }
+
+    .score {
+      font-size: 36px;
+      font-weight: 750;
+      color: #16803d;
+    }
+
+    .muted { color: #718078; font-size: 13px; }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid #edf0ed;
+    }
+
+    .metric strong { text-align: right; }
+
+    .logic {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8faf8;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .logic p { margin: 8px 0; }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 9px;
+      padding: 13px 16px;
+      font-weight: 650;
+      font-size: 14px;
+    }
+
+    .export {
+      width: 100%;
+      margin-top: 18px;
+      background: #176b43;
+      color: white;
+    }
+
+    button:hover { filter: brightness(.94); }
+
+    @media (max-width: 850px) {
+      .layout { grid-template-columns: 1fr; padding: 12px; }
+      #map { height: 360px; }
+      header { padding: 18px; }
+    }
+
+    /* Print only the briefing card */
+    @media print {
+      body { background: white; }
+      header, .map-panel, .export, .screen-only {
+        display: none !important;
+      }
+      .layout { display: block; padding: 0; }
+      .panel {
+        border: none;
+        padding: 0;
+      }
+      .score-box { border: 1px solid #ddd; }
+      .logic { background: white; border: 1px solid #ddd; }
+      .brief-footer { display: block !important; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div>
+    <h1>Parcel Intelligence</h1>
+    <p>Land acquisition · Preliminary feasibility screening</p>
+  </div>
+  <span>ELENA'S WORKSPACE</span>
+</header>
+
+<main class="layout">
+  <section class="panel map-panel">
+    <h2>Interactive parcel map</h2>
+    <div id="map"></div>
+
+    <div class="legend">
+      <span><i class="dot green"></i>Developable</span>
+      <span><i class="dot yellow"></i>Needs review</span>
+      <span><i class="dot red"></i>Disqualified</span>
+    </div>
+    <p class="muted">
+      Demo parcels only. Click a polygon to inspect its scorecard.
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>Parcel scorecard</h2>
+
+    <div class="score-box">
+      <div class="muted">OVERALL VIABILITY SCORE</div>
+      <div class="score" id="score">82 / 100</div>
+      <strong id="status">● Viable for further screening</strong>
+      <p class="muted" id="parcelName">Parcel P-001 · North Ridge</p>
+    </div>
+
+    <div class="metric">
+      <span>Acreage</span>
+      <strong id="acreage">540 acres 🟢</strong>
+    </div>
+    <div class="metric">
+      <span>Grid proximity</span>
+      <strong id="grid">0.6 miles 🟢</strong>
+    </div>
+    <div class="metric">
+      <span>Flood zone overlap</span>
+      <strong id="flood">12% 🟡</strong>
+    </div>
+    <div class="metric">
+      <span>Flood penalty</span>
+      <strong id="penalty">−18 points</strong>
+    </div>
+    <div class="metric">
+      <span>Protected lands</span>
+      <strong id="protected">0% 🟢</strong>
+    </div>
+
+    <div class="logic">
+      <strong>Why did this parcel receive its score?</strong>
+      <div id="explanation" aria-live="polite">
+        <p>🟢 Acreage meets the example screening threshold.</p>
+        <p>🟢 Substation proximity is favorable, pending capacity review.</p>
+        <p>🟡 Flood exposure triggers an illustrative penalty.</p>
+        <p>🟢 No protected-land overlap reported in demo data.</p>
+      </div>
+      <p class="muted">
+        All demo values are illustrative, not verified findings.
+      </p>
+    </div>
+
+    <button class="export" onclick="window.print()">
+      ↗ Export Briefing Card
+    </button>
+
+    <p class="muted screen-only">
+      Opens your browser's print dialog. Choose “Save as PDF”
+      to create a shareable briefing.
+    </p>
+
+    <div class="brief-footer" style="display:none">
+      <hr>
+      <p>
+        Preliminary parcel screening only. Confirm source data,
+        land-use restrictions, environmental constraints, and
+        utility interconnection feasibility before making decisions.
+      </p>
+      <p id="reportDate"></p>
+    </div>
+  </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Synthetic example data — replace with real parcel GeoJSON.
+  const parcels = [
+    {
+      id: "P-001",
+      name: "North Ridge",
+      score: 82,
+      acres: 540,
+      grid: 0.6,
+      flood: 12,
+      penalty: 18,
+      protected: 0,
+      coords: [
+        [35.25, -80.90], [35.25, -80.88],
+        [35.27, -80.88], [35.27, -80.90]
+      ]
+    },
+    {
+      id: "P-002",
+      name: "Creekside",
+      score: 34,
+      acres: 180,
+      grid: 3.2,
+      flood: 45,
+      penalty: 35,
+      protected: 8,
+      coords: [
+        [35.28, -80.92], [35.28, -80.90],
+        [35.30, -80.90], [35.30, -80.92]
+      ]
+    }
+  ];
+
+  const map = L.map("map").setView([35.27, -80.90], 12);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap contributors"
+  }).addTo(map);
+
+  function colorFor(score) {
+    if (score >= 70) return "#16a34a";
+    if (score >= 45) return "#eab308";
+    return "#dc2626";
+  }
+
+  function statusFor(score) {
+    if (score >= 70) return "Viable for further screening";
+    if (score >= 45) return "Needs further review";
+    return "Disqualified under demo rules";
+  }
+
+  function selectParcel(p) {
+    document.getElementById("score").textContent =
+      `${p.score} / 100`;
+    document.getElementById("score").style.color =
+      colorFor(p.score);
+    document.getElementById("status").textContent =
+      "● " + statusFor(p.score);
+    document.getElementById("parcelName").textContent =
+      `Parcel ${p.id} · ${p.name}`;
+    document.getElementById("acreage").textContent =
+      `${p.acres} acres`;
+    document.getElementById("grid").textContent =
+      `${p.grid} miles`;
+    document.getElementById("flood").textContent =
+      `${p.flood}%`;
+    document.getElementById("penalty").textContent =
+      `−${p.penalty} points`;
+    document.getElementById("protected").textContent =
+      `${p.protected}%`;
+
+    const explanations = [
+      p.acres >= 500
+        ? "🟢 Acreage meets the example threshold."
+        : "🟡 Acreage is below the example threshold.",
+      p.grid <= 1
+        ? "🟢 Substation proximity is favorable; capacity remains unverified."
+        : "🟡 Grid connection distance needs further investigation.",
+      `🟡 ${p.flood}% flood overlap; illustrative penalty: −${p.penalty} points.`,
+      p.protected === 0
+        ? "🟢 No protected-land overlap recorded in demo data."
+        : `🔴 ${p.protected}% protected-land overlap requires review.`
+    ];
+
+    document.getElementById("explanation").innerHTML =
+      explanations.map(s => `<p>${s}</p>`).join("");
+
+    document.getElementById("reportDate").textContent =
+      "Generated: " + new Date().toLocaleDateString();
+
+    document.title = `Parcel Brief - ${p.id}`;
+  }
+
+  parcels.forEach(p => {
+    const polygon = L.polygon(p.coords, {
+      color: colorFor(p.score),
+      fillColor: colorFor(p.score),
+      fillOpacity: 0.35,
+      weight: 2
+    }).addTo(map);
+
+    polygon.bindTooltip(`${p.id} · ${p.score}/100`);
+    polygon.bindPopup(
+      `<strong>${p.name}</strong><br>` +
+      `Score: ${p.score}/100<br>` +
+      `<button onclick="window.selectParcel('${p.id}')">View scorecard</button>`
+    );
+
+    polygon.on("click", () => selectParcel(p));
+  });
+
+  window.selectParcel = id => {
+    const parcel = parcels.find(p => p.id === id);
+    if (parcel) selectParcel(parcel);
+  };
+
+  selectParcel(parcels[0]);
+</script>
+</body>
+</html>
